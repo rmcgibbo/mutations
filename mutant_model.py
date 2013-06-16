@@ -40,7 +40,7 @@ class MutantModel(object):
                  fixed_q=None):
         """Probabilistic model for the observed outbound transition
         counts from state i.
-    
+
         Parameters
         ----------
         observed_counts : np.ndarray, shape=(n_states)
@@ -56,9 +56,36 @@ class MutantModel(object):
             variable, make it fixed at this value. Note that when fixed_q is
             specified, alpha and beta have no influence.
         """
-        self.model = _construct_model(observed_counts, base_counts, alpha,
-                                      beta, fixed_q)
-        self.sampler = pymc.MCMC(self.model)
+        base_counts = np.asarray(base_counts, dtype=float)
+        observed_counts = np.asarray(observed_counts, dtype=float)
+        assert base_counts.shape == observed_counts.shape
+
+        if fixed_q is None:
+            q = pymc.Beta(name='q', alpha=alpha, beta=beta)
+        else:
+            q = fixed_q
+
+        jeffrys_counts = 0.5*np.ones_like(base_counts)
+
+        @pymc.deterministic
+        def psuedocounts(q=q):
+            return q*base_counts + jeffrys_counts
+
+        _probs = pymc.Dirichlet('_probs', theta=psuedocounts)
+        probs = pymc.CompletedDirichlet('probs', _probs)
+
+        counts = pymc.Multinomial(name='counts', value=observed_counts,
+                                  n=np.sum(observed_counts), p=_probs,
+                                  observed=True)
+
+        # set all of the random variables as attributes
+        self.q = q
+        self.probs = probs
+        self._probs = _probs
+        self.counts = counts
+        self.psuedocounts = psuedocounts
+
+        self.sampler = pymc.MCMC(self)
         self.observed_counts = observed_counts
 
     def sample(self, iter, burn=0, thin=1, tune_interval=1000,
@@ -75,23 +102,23 @@ class MutantModel(object):
 
     def trace(self, name):
         """Get the posterior samples. Convenience to `pymc.MCMC.trace`.
-        
+
         The allowable `name`s are {'probs', '_probs', 'psuedocounts', and 'q'}
         """
-        
+
         return self.sampler.trace(name)
 
     def expected_information_gain(self, n_perturb_samples=1000):
         """Calculate the expected information gain that would come from
         observing a single new count
-        
+
         Parameters
         ----------
         n_perturb_samples : int
             Number of times to simulate sampling the single new count. (In
             addition to this sampling, this method already uses the MCMC
             trace to sample from the posterior over the model parameters
-        
+
         Returns
         -------
         ig : float
@@ -103,50 +130,6 @@ class MutantModel(object):
                 self.trace('psuedocounts')[:] + self.observed_counts,
                 n_perturb_samples=n_perturb_samples)
         return ig
-
-
-def _construct_model(observed_counts, base_counts, alpha, beta, fixed_q=None):
-    """Set up the probabilistic model for the observed outbound transition
-    counts from state i.
-    
-    Parameters
-    ----------
-    observed_counts : np.ndarray, shape=(n_states)
-        The number of observed transitions to other states in THIS protein
-    base_counts : np.ndarray, shape=(n_states)
-        The number of observed transitions to other states in the BASE protein,
-        of which this protein is a mutant.
-    alpha, beta : float
-        Hyperparameters for the influence that the base protein has on
-        our protein.
-    fixed_q : {float, None}
-        Instead of setting the influence that the base protein has as a random
-        variable, make it fixed at this value. Note that when fixed_q is
-        specified, alpha and beta have no influence.
-    """
-    base_counts = np.asarray(base_counts, dtype=float)
-    observed_counts = np.asarray(observed_counts, dtype=float)
-    assert base_counts.shape == observed_counts.shape
-
-    if fixed_q is None:
-        q = pymc.Beta(name='q', alpha=alpha, beta=beta)
-    else:
-        q = fixed_q
-
-    jeffrys_counts = 0.5*np.ones_like(base_counts)
-
-    @pymc.deterministic
-    def psuedocounts(q=q):
-        return q*base_counts + jeffrys_counts
-
-    _probs = pymc.Dirichlet('_probs', theta=psuedocounts)
-    probs = pymc.CompletedDirichlet('probs', _probs)
-
-    counts = pymc.Multinomial(name='counts', value=observed_counts,
-                              n=np.sum(observed_counts), p=_probs,
-                              observed=True)
-
-    return [q, probs, _probs, counts, psuedocounts]
 
 
 def increment_counts_from_multinomial(probs):
@@ -253,7 +236,7 @@ def expected_information_gain(probs, alphas, n_perturb_samples):
     assert alphas.shape == probs.shape
     assert np.all(np.sum(probs, axis=1) == np.ones(n_samples))
     perturbed_alphas = np.copy(alphas)
-    
+
     values = []
 
     for i in range(n_perturb_samples):
@@ -261,7 +244,7 @@ def expected_information_gain(probs, alphas, n_perturb_samples):
         perturbed_alphas[row, col] += 1.0
         values.append(dirichlet_kl_divergence(alphas, perturbed_alphas))
         perturbed_alphas[row, col] -= 1.0
-    
+
     return np.mean(values), np.std(values)
 
 
@@ -269,15 +252,21 @@ def expected_information_gain(probs, alphas, n_perturb_samples):
 
 if __name__ == '__main__':
     base_counts = np.array([100, 90, 80, 70, 10, 1], dtype=float)
-    observed_counts = np.array([1, 1, 1, 1, 1, 1], dtype=float) * 10
+    observed_counts = np.array([4, 15, 10, 1, 1, 1], dtype=float) * 1
     #base_counts = 1000*np.ones_like(observed_counts)
     #base_counts = np.ones_like(observed_counts)
 
     mm = MutantModel(observed_counts=observed_counts, base_counts=base_counts,
-                     alpha=0.5, beta=0.5)
+                     alpha=1, beta=1)
+    M = pymc.MAP(mm)
+    M.fit()
 
-    mm.sample(iter=20000, burn=1000, thin=100, progress_bar=False)
-    print mm.expected_information_gain()
+    print 'MLE', observed_counts / np.sum(observed_counts)
+    print 'MAP', mm.probs.value
+    print mm.q.value
+
+    #mm.sample(iter=20000, burn=1000, thin=100, progress_bar=False)
+    #print mm.expected_information_gain()
 
 
 

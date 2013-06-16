@@ -134,4 +134,6 @@ So here's the procedure: first, we run an MCMC sampler over this Beta-Dirichlet-
 Note: there is a simplifying assumption built in here. It's that the additional sample $L$ doesn't change $q_i$. I think this is okay, and it's \emph{key} for the tractability because it lets us use the Dirichlet/multinomial conjugacy to update the $\alpha$ with the virtual count.
 
 Then choose the state that maximized this expected information gain.
+
+As an idea for further thought, there might other approaches that would avoid the need for any MCMC. If $q_i$ was instead a fixed parameter, and it was estimated from the data by cross validation for instance. But I'm not sure how to get around the need to sample over $L$...
 \end{document}
