@@ -276,7 +276,7 @@ if __name__ == '__main__':
     mm = MutantModel(observed_counts=observed_counts, base_counts=base_counts,
                      alpha=0.5, beta=0.5)
 
-    mm.sample(iter=10000, burn=1000, thin=100, progress_bar=False)
+    mm.sample(iter=20000, burn=1000, thin=100, progress_bar=False)
     print mm.expected_information_gain()
 
 

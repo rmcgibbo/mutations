@@ -1,6 +1,7 @@
 \documentclass[twocolumn,floatfix,nofootinbib,aps]{revtex4-1}
 \usepackage[utf8]{inputenc}
 
+\usepackage{algorithmicx, algpseudocode, algorithm}
 \usepackage{amsmath}    % need for subequations
 \usepackage{amssymb}    % for symbols
 \usepackage{graphicx}   % need for figures
@@ -109,29 +110,28 @@ $$
 E[D_{KL}(\lambda_q || \lambda_p + \vec{L})] = ?
 $$
 
-We going to have to sample over $\vec{L}$.
-% 
-% 
-% To phrase this problem mathemtically, we need to define an objective function that encodes our uncertainty in the model, and then choose the state $i$ that minimizes that objective function.
-% 
-% Let $H_i(\vec{K})$ be the entropy in the posterior distribution of $\vec{p}_i^{A'}$. This is a little bit of an abuse of notation, since it should be written as $H(p_i^{A'} | \vec{K}, \ldots)$.  Define the \emph{expected information gain}, $\operatorname{IG}$, from running a single markov lagtime worth of of new simulation starting from state $i$ to be $\operatorname{IG}(i) = E [H_i(\vec{K}) - H_i(\vec{K} + \vec{L})]$, where $\vec{L}$ is the vector of \emph{newly observed} transitions counts in the incremental simulation, which is distributed as $\vec{L} \sim \operatorname{Mult}(\vec{p}_i^{A'})$. Note that if we run simulations for multiple lagtimes, the expression is going to get a lot more complicated.
-% 
-% I think this is just the K-L divergence of the $L$ update to the posterior.
-% 
-% Proposition: we should choose to start new simulations from states that maximimize the expected information gain, $\displaystyle i^*=\argmax_i \operatorname{IG}(i)$
-% 
-% \section*{Computing the Information Gain}
-% 
-% How do we compute $H_i(\vec{K})$ and $IG(i)$? One challenge is $q_i$. We have an analytic solution for the conditional entropy given $q_i$, since then the conditional distribution over $\vec{p}_i^{A'}$ is just Dirichlet. Let's start by just assuming that we know a fixed value for $q_i$. Once, we've figured out the expression given $q_i$, then maybe we can sample over $q_i$. If $q_i$ is fixed, and for convenience we write the parameters for the $\vec{p}_i^{A'}$ distribution as $\alpha = q_i\cdot \vec{c}_{i}^{A} + \vec{K} + 1/2$ (not confusing this vector $\alpha$ with the $q_i$ hyperparameter) then
-% 
-% \begin{align*}
-% H_i(\vec{K}) &= H(p_i^{A'} | \vec{K}) \\
-% &= \log B(\alpha) + (\alpha_0 - N) \psi(\alpha_0) - \sum_j^N (\alpha_j - 1) \psi(\alpha_j)
-% \end{align*}
-% 
-% \noindent where $N$ is the number of states.\\
-% 
-% How about the expected entropy after getting the aditional data, $E[H_i(\vec{K} + \vec{L})]$? Can we calculate this analytically without resorting to sampling over $\vec{L}$?
+We going to have to sample over $\vec{L}$. Also, this analytic form for the K-L divergence is only right conditional on $q_i$, because it's only when conditioned on $q_i$ that we have a Dirichlet distribution for $\vec{p}_i^{A'}$.
+
+So here's the procedure: first, we run an MCMC sampler over this Beta-Dirichlet-Multinomial model, keeping track of the posterior distribution samples over $\vec{p}_i^{A'}$ and $\alpha = q_i \cdot \vec{c}_i^A + \vec{K} + 1/2$. For each of these samples, we simulate draws from the multinomial, make ``virtual'' updates to the model at fixed $q$, and check the K-L divergence.\\
 
 
+
+\begin{algorithm}[H]
+\centering
+\begin{algorithmic}[c]
+\State Sampled-KLs $\gets$ List()
+\For {$(\vec{p}_i^{A'}, \alpha)$ in MCMC posterior samples}
+    \For {$i$ in $1..M$}
+       \State Sample $L$ from $\operatorname{Mult}(1, \vec{p}_i^{A'})$
+       \State Append $D_{KL}(\alpha \,||\, \alpha + L)$ to Sampled-KLs
+    \EndFor
+\EndFor
+\State \Return \textsc{Mean}(Sampled-KLs)
+\end{algorithmic}
+\caption{MCMC Expected Information Gain}
+\end{algorithm}
+
+Note: there is a simplifying assumption built in here. It's that the additional sample $L$ doesn't change $q_i$. I think this is okay, and it's \emph{key} for the tractability because it lets us use the Dirichlet/multinomial conjugacy to update the $\alpha$ with the virtual count.
+
+Then choose the state that maximized this expected information gain.
 \end{document}
