@@ -212,7 +212,7 @@ def dirichlet_kl_divergence(alpha_from, alpha_to):
 
     return kl
 
-@_timing
+#@_timing
 def expected_information_gain(probs, alphas, n_perturb_samples):
     """Compute the expected information gain that would come from observing
     a single new observation from a multinomial distribution
@@ -246,7 +246,6 @@ def expected_information_gain(probs, alphas, n_perturb_samples):
         perturbed_alphas[row, col] -= 1.0
 
     return np.mean(values), np.std(values)
-
 
 
 
