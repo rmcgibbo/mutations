@@ -81,59 +81,60 @@ $$
 P(\vec{p}_i^{A'} \vert \vec{K}) \propto \int_0^1 dq \; \operatorname{Dir}(q \cdot \vec{c}_i^{A} + \vec{K} + 1/2) \cdot  P_{\alpha, \beta}(q_i)
 $$
 
-With MCMC, I think sampling from this posterior is pretty straightforward. But what about an analytic solution? When I write out the integral explicitly, it looks pretty bad.
 
-\begin{align*}
-P(\vec{p}_i^{A'} &= \vec{x} \vert \vec{K}) \propto \int_0^1 dq \; \frac{1}{Z(q_i)} \prod_{j=1} x_j^{q_i \cdot \vec{c}_{ij}^{A'} + \vec{K}_j + 1/2} q_i^{\alpha-1}(1-q_i)^{\beta-1}\\
-Z(q_i) &= \frac{1}{B(q \cdot \vec{c}_i^{A} + \vec{K} + 1/2) \cdot B(\alpha, \beta)}
-\end{align*} 
 
-But if instead we knew $q$ directly -- i.e. by just fixing at a certain value, then the distribution for $P(\vec{p}_i^{A'})$ would be simple. Maybe we do MCMC to sample over $q$, and then use analytic formulas given $q$...
+%With MCMC, I think sampling from this posterior is pretty straightforward. But what about an analytic solution? When I write out the integral explicitly, it looks pretty bad.
+
+%\begin{align*}
+%P(\vec{p}_i^{A'} &= \vec{x} \vert \vec{K}) \propto \int_0^1 dq \; \frac{1}{Z(q_i)} \prod_{j=1} x_j^{q_i \cdot \vec{c}_{ij}^{A'} + \vec{K}_j + 1/2} q_i^{\alpha-1}(1-q_i)^{\beta-1}\\
+%Z(q_i) &= \frac{1}{B(q \cdot \vec{c}_i^{A} + \vec{K} + 1/2) \cdot B(\alpha, \beta)}
+%\end{align*} 
+
+%But if instead we knew $q$ directly -- i.e. by just fixing at a certain value, then the distribution for $P(\vec{p}_i^{A'})$ would be simple. Maybe we do MCMC to sample over $q$, and then use analytic formulas given $q$...
 
 \section{Active Learning}
 We've done a little bit of simulation in $A'$, and now we want to start some new simulations. From which state $i$ should we start our next round of sampling?
 
-We should choose a state $i$ to simulate from that maximizes the expected K-L divergence between the revised posterior (after observing a new count) and the current posterior distribution based on the data we already have. This is basically choosing the state that maximizes the expected information gain.
+The goal should be, in some sense, to maximize our expected information gain, or achieve the greatest reduction in the model's uncertainty. We consider two strategies alternative.
 
-The K-L divergence from one Dirichlet distribution, $p$, to another, $q$, is given \url{www.fil.ion.ucl.ac.uk/~wpenny/publications/densities.ps} as
+\subsection{Maximize Information Gain in Transition Probabilities}
+
+First, we consider adaptively choosing the state from which to start new simulations in a way that maximizes the expected information gain in the transition probabilities $p_{ij}$. Conditional on $q_i$, the expected information gain in the outbound transition probabilities from state $i$ is given by the expected Kullback–Leibler divergence between the current
+$P(p_i^{A'})$ and the updated posterior, $P(p_i^{A'} | e)$, where $e$ is newly observed transition, distributed according to the current model.
+
+The K-L divergence from one Dirichlet distribution, $p$, to another, $q$, is given by
 
 \begin{align*}
-D_{KL}(\lambda_q || \lambda_p) = \log& \frac{\Gamma(\lambda_{qt})}{\Gamma(\lambda_{pt})} + \sum_{s=1}^m \log \frac{\Gamma(\lambda_p(s))}{\Gamma(\lambda_q(s))} \\
-&+ \sum_{s=1}^m \left[\lambda_q(s) -\lambda_p(s)\right]\left[\Psi(\lambda_q(s)) - \Psi(\lambda_{qt})\right]
+D_{KL}(\lambda^q || \lambda^p) = \log& \frac{\Gamma(\lambda^{qt})}{\Gamma(\lambda^{pt})} + \sum_{s=1}^m \log \frac{\Gamma(\lambda^p_s)}{\Gamma(\lambda^q_s)} \\
+&+ \sum_{s=1}^m \left[\lambda^q_s -\lambda^p_s\right]\left[\Psi(\lambda^q_s) - \Psi(\lambda^{qt})\right]
 \end{align*}
 
-Where $\lambda_p$ and $\lambda_q$ are the parameters of the two Dirichlet distributions, $\lambda_{qt} = \sum_{s=1}^{m}\lambda_q(s)$, $\lambda_{pt} = \sum_{s=1}^{m}\lambda_p(s)$, and $m$ is the number of states.
+Where $\lambda^p$ and $\lambda^q$ are the parameters of the two Dirichlet distributions, $\lambda^{qt} = \sum_{s=1}^{m}\lambda^q_s$, $\lambda^{pt} = \sum_{s=1}^{m}\lambda^p_s$, and $m$ is the number of states.
 
-But how about the expected K-L divergence after collecting an additional sample, $L$?
+If $\lambda^p$ is formed from $\lambda^q$ by incrementing a single element $l$  by one, then by simple properties of the gamma function, it can be shown that
+
+\begin{align*}
+D_{KL}(\lambda || \lambda + e_l) = - \log(\lambda^t) + \log(\lambda_l) + \Psi(\lambda^{t}) - \Psi(\lambda_l)
+\end{align*}
+
+Then, the expected KL divergence is 
 
 $$
-E[D_{KL}(\lambda_q || \lambda_p + \vec{L})] = ?
+E[D_{KL}] = \sum_l D_{KL}(\lambda || \lambda + e_l) P(l | \lambda)
 $$
 
-We going to have to sample over $\vec{L}$. Also, this analytic form for the K-L divergence is only right conditional on $q_i$, because it's only when conditioned on $q_i$ that we have a Dirichlet distribution for $\vec{p}_i^{A'}$.
+$P(l \vert \lambda) = \int d \vec{p} \; P(l \vert \vec{p}) P(\vec{p} \vert \lambda)$ follows the Multinomial-Dirichlet distribution, with $P(l \vert \lambda) = \lambda_l / \lambda^t$. Thus the expected information gain comes out to be
 
-So here's the procedure: first, we run an MCMC sampler over this Beta-Dirichlet-Multinomial model, keeping track of the posterior distribution samples over $\vec{p}_i^{A'}$ and $\alpha = q_i \cdot \vec{c}_i^A + \vec{K} + 1/2$. For each of these samples, we simulate draws from the multinomial, make ``virtual'' updates to the model at fixed $q$, and check the K-L divergence.\\
+$$
+E[D_{KL} \vert q_i] = \Psi(\lambda^t) - \log(\lambda^t) + \frac{1}{\lambda^t} \sum_l \left[ \lambda_l \left( \log (\lambda_l) - \Psi(\lambda_l) \right) \right] 
+$$
 
+This formula is still conditional on $q_i$. Thus the procedure is to fit the model for each row of the transition matrix with MCMC and then compute, for each sampled $\lambda$ from the posterior, the expected information gain as above. The mean over the samples is then the final ``score'' for each state. At each step we choose the to initialize new sampling from the state with the highest such score.
 
+\subsection{Minimize Uncertainty in the First Eigenvalue}
 
-\begin{algorithm}[H]
-\centering
-\begin{algorithmic}[c]
-\State Sampled-KLs $\gets$ List()
-\For {$(\vec{p}_i^{A'}, \alpha)$ in MCMC posterior samples}
-    \For {$i$ in $1..M$}
-       \State Sample $L$ from $\operatorname{Mult}(1, \vec{p}_i^{A'})$
-       \State Append $D_{KL}(\alpha \,||\, \alpha + L)$ to Sampled-KLs
-    \EndFor
-\EndFor
-\State \Return \textsc{Mean}(Sampled-KLs)
-\end{algorithmic}
-\caption{MCMC Expected Information Gain}
-\end{algorithm}
+The procedure above treats the entropy in each row of the transition matrix independently and on equal footing. But if we care about predicting the long-time dynamics of the system accurately, we care substantially more about some states than others.
 
-Note: there is a simplifying assumption built in here. It's that the additional sample $L$ doesn't change $q_i$. I think this is okay, and it's \emph{key} for the tractability because it lets us use the Dirichlet/multinomial conjugacy to update the $\alpha$ with the virtual count.
+Instead of maximize the information gain in the transition probabilities, $p_{ij}$, an alternative would be to minimize the uncertainty in the model's longest implied timescale.
 
-Then choose the state that maximized this expected information gain.
-
-As an idea for further thought, there might other approaches that would avoid the need for any MCMC. If $q_i$ was instead a fixed parameter, and it was estimated from the data by cross validation for instance. But I'm not sure how to get around the need to sample over $L$...
 \end{document}

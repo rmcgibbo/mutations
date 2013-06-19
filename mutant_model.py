@@ -108,145 +108,26 @@ class MutantModel(object):
 
         return self.sampler.trace(name)
 
-    def expected_information_gain(self, n_perturb_samples=1000):
+    def expected_information_gain(self):
         """Calculate the expected information gain that would come from
         observing a single new count
-
-        Parameters
-        ----------
-        n_perturb_samples : int
-            Number of times to simulate sampling the single new count. (In
-            addition to this sampling, this method already uses the MCMC
-            trace to sample from the posterior over the model parameters
 
         Returns
         -------
         ig : float
             The expected information gain
-        std_ig : float
-            The standard deviation in the information gain.
         """
-        ig = expected_information_gain(self.trace('probs')[:, 0, :],
-                self.trace('psuedocounts')[:] + self.observed_counts,
-                n_perturb_samples=n_perturb_samples)
-        return ig
+        alphas = self.trace('psuedocounts')[:] + self.observed_counts
+        n_samples = len(alphas)
 
+        alphas_total = np.sum(alphas, axis=1)
 
-def increment_counts_from_multinomial(probs):
-    """Give the indices of the counts to increment from an incremental
-    observation from probs.
-
-    This operation is done "in parallel" accross many experiments. So `probs`
-    and `counts`, are not the parameters for a single dirichlet/multinomial
-    distribution, they're for a whole set of dirichlet and multinomials at
-    once. The first ax
-
-    Parameters
-    ----------
-    probs : np.ndarray, size=(n_experiments, n_objects)
-        In experiment `i`, the probability for drawing object `j` was
-        counts[i, j].
-
-    The first axes corresponds naturally to different realizations of
-    `counts` and `probs` from an MCMC sampler.
-    """
-    def sample_multinomial(probs):
-        cs = np.cumsum(probs, axis=1)
-        idx = np.sum(cs < np.random.rand(*cs.shape), axis=1)
-        return np.arange(len(probs)), idx
-
-    row, col = sample_multinomial(probs)
-
-    return row, col
-
-
-def dirichlet_kl_divergence(alpha_from, alpha_to):
-    """Calculate the K-L divergence from a Dirichlet distribution parameterized
-    by `alpha_from` to a Dirichlet distribution parameterized by `alpha_to`
-
-    Parameters
-    ----------
-    alpha_from : np.ndarray, size=(n_states)
-        Concentration parameters for the first distribution
-    alpha_to : np.ndarray, size=(n_states)
-        Concentration parameters for the second distribution
-
-    Returns
-    -------
-    kl : float
-        The K-L divergence
-
-    Note
-    ----
-    alpha_from and alpha_to can also be 2d, in which case the output will
-    be 1d, and the results will be computed by just running the calculation
-    on each row independently, as in
-
-    kl = []
-    for i in range(n_samples):
-        kl.append(dirichlet_kl_divergence(alpha_from_2d[i],
-                                          alpha_to_2d[i]))
-    """
-    alpha_from = np.asarray(alpha_from)
-    alpha_to = np.asarray(alpha_to)
-
-    # upconvert to 1 x N arrays if they supply 1d arrays
-    if alpha_from.ndim == 1:
-        alpha_from = alpha_from[np.newaxis, :]
-    if alpha_to.ndim == 1:
-        alpha_to = alpha_to[np.newaxis, :]
-
-    assert alpha_from.shape == alpha_to.shape
-    assert alpha_from.ndim == 2
-
-    alpha_from_total = np.sum(alpha_from, axis=1)
-    alpha_to_total = np.sum(alpha_to, axis=1)
-
-    kl = (scipy.special.gammaln(alpha_from_total) -
-          scipy.special.gammaln(alpha_to_total)) + \
-         np.sum(scipy.special.gammaln(alpha_to) -
-                scipy.special.gammaln(alpha_from), axis=1) + \
-         np.sum((alpha_from - alpha_to) *
-                (scipy.special.psi(alpha_from) -
-                 scipy.special.psi(alpha_from_total)[:, np.newaxis]), axis=1)
-
-    return kl
-
-#@_timing
-def expected_information_gain(probs, alphas, n_perturb_samples):
-    """Compute the expected information gain that would come from observing
-    a single new observation from a multinomial distribution
-
-    Parameters
-    ----------
-    probs : np.ndarray, shape=(n_samples, n_objects)
-        Each row is a setting of the multinomial parameters. It is assume that
-        each row is an IID sample from the Dirichlet distribution.
-    alpha : np.ndarray, shape=(n_samples, n_objects)
-        Each row is a setting of the Dirichlet parameters. It is assume that
-        each row is an IID sample from the posterior distribution of the
-        Dirichlet parameters (i.e. these may be uncertain too). If the aphas
-        are all fixed and only the `probs` are RVs, then just make all of
-        the rows the same.
-    """
-    probs = np.asarray(probs)
-    alphas = np.asarray(alphas)
-
-    n_samples, n_states = probs.shape
-    assert alphas.shape == probs.shape
-    assert np.all(np.sum(probs, axis=1) == np.ones(n_samples))
-    perturbed_alphas = np.copy(alphas)
-
-    values = []
-
-    for i in range(n_perturb_samples):
-        row, col = increment_counts_from_multinomial(probs)
-        perturbed_alphas[row, col] += 1.0
-        values.append(dirichlet_kl_divergence(alphas, perturbed_alphas))
-        perturbed_alphas[row, col] -= 1.0
-
-    return np.mean(values), np.std(values)
-
+        igs = (scipy.special.psi(alphas_total) - np.log(alphas_total) +
+            np.sum(alphas*(np.log(alphas) - scipy.special.psi(alphas)), axis=1) / alphas_total)
+        
+        assert len(igs) == n_samples
+        
+        return np.mean(igs)
 
 
 if __name__ == '__main__':
@@ -257,15 +138,14 @@ if __name__ == '__main__':
 
     mm = MutantModel(observed_counts=observed_counts, base_counts=base_counts,
                      alpha=1, beta=1)
-    M = pymc.MAP(mm)
-    M.fit()
+    mm.sample(iter=20000, burn=1000, thin=100, progress_bar=False)
+    print 'E[ig]', mm.expected_information_gain()
+
 
     print 'MLE', observed_counts / np.sum(observed_counts)
     print 'MAP', mm.probs.value
-    print mm.q.value
+    print 'q  ', mm.q.value
 
-    #mm.sample(iter=20000, burn=1000, thin=100, progress_bar=False)
-    #print mm.expected_information_gain()
 
 
 
