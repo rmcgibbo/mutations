@@ -101,24 +101,21 @@ def plot_transition_matrices_and_traj(P, P_prime, trajectory):
 
 
 class MutantSampler(object):
-    def __init__(self, base_counts, tmat):
+    def __init__(self, base_counts, transition_matrix):
         self.base_counts = np.asarray(base_counts, dtype=np.float)
         self.observed_counts = np.zeros_like(self.base_counts, dtype=np.float)
-        self.tmat = tmat
+        self.transition_matrix = transition_matrix
         self.n_states = base_counts.shape[0]
         
-        # an order of the counts that have been sampled
-        # 
+        # an record of the order that new transitions were attempted and observed
         self._counts = []
         self._igs = []
     
     def choose_state(self):
-        igs = []
-        for i in range(self.n_states):
-            model = MutantModel(self.observed_counts[i], self.base_counts[i],
-                                alpha=1, beta=1)
-            model.sample(iter=5000, burn=500, thin=50, progress_bar=False)
-            igs.append(model.expected_information_gain())
+        model = MutantModel(self.observed_counts, self.base_counts,
+                            alpha=1, beta=1)
+        model.sample(iter=50000, burn=1000, thin=100, progress_bar=False)
+        igs = model.expected_information_gain()
 
         self._igs.append(igs)
         print 'igs ', [float('%.3f' % f) for f in igs]
@@ -126,7 +123,7 @@ class MutantSampler(object):
         return np.argmax(igs)
 
     def sample(self, from_state):
-        cs = np.cumsum(self.tmat[from_state])
+        cs = np.cumsum(self.transition_matrix[from_state])
         to_state = np.sum(cs < np.random.rand())
 
         self.observed_counts[from_state, to_state] += 1
@@ -135,28 +132,34 @@ class MutantSampler(object):
         
         print 'sampling: %s -> %s' % (from_state, to_state)
         return from_state, to_state
-
+    
+    def step(self, n_steps):
+        for i in range(n_steps):
+            idx = ms.choose_state()
+            ms.sample(idx)
+    
 
 if __name__ == '__main__':
     # plot_transition_matrices_and_traj(P, P_prime, trajectory)
     # plot_convergence(P, trajectory)
     # pp.show()
     
-    P_prime = P + 0.2*scipy.sparse.rand(P.shape[0], P.shape[1], density=0.1).todense()
-    P_prime /= np.sum(P_prime, axis=1)
+    mutant_transition_matrix = P + 0.2*scipy.sparse.rand(P.shape[0], P.shape[1], density=0.1).todense()
+    mutant_transition_matrix /= np.sum(mutant_transition_matrix, axis=1)
 
     trajectory =  np.array(msm_analysis.sample(P, 0, 5000))
-    P_counts = MSMLib.get_counts_from_traj(trajectory).todense()
+    base_counts = MSMLib.get_counts_from_traj(trajectory).todense()
 
     
-    print 'P counts'
-    print P_counts
+    print 'base counts'
+    print base_counts
     
-    ms = MutantSampler(P_counts, P_prime)
-    for i in range(5000):
-        idx = ms.choose_state()
-        ms.sample(idx)
+    ms = MutantSampler(base_counts, mutant_transition_matrix)
+    ms.step(10)
+    
+    print 'observed counts'
+    print ms.observed_counts
 
-    io.saveh('sampling.h5', base_counts=P_counts, samples=np.array(ms._counts),
-                            observed_counts=ms.observed_counts,
-                            igs=np.array(ms._igs))
+    io.saveh('sampling.h5', base_counts=base_counts, samples=np.array(ms._counts),
+                            observed_counts=ms.observed_counts, igs=np.array(ms._igs),
+                            transition_matrix=mutant_transition_matrix)
