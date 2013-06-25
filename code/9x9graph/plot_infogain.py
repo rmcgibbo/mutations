@@ -55,6 +55,7 @@ df = pd.DataFrame(igs, columns=['state %d' % i for i in range(n_states)])
 df.plot(legend=False, ax=ax)
 ax.set_ylabel('Expected Information Gain [nats]')
 ax.set_xlim(-1, n_counts)
+ax.set_title('Expected Information Gain')
 pp.xlabel('Time [steps]')
 
 
@@ -69,6 +70,7 @@ ax.set_ylabel('Sampled State [index]')
 ax.set_ylim(-1, n_states)
 ax.set_xlim(-1, n_counts)
 ax.set_yticks(range(n_states))
+ax.set_title('Starting State')
 pp.xlabel('Time [steps]')
 
 

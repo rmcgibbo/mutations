@@ -32,14 +32,14 @@ ax0 = pp.subplot(gs[0, 0:10])
 ax1 = pp.subplot(gs[0, 12:22])
 cb_ax = pp.subplot(gs[0,-1])
 
-ax0.set_title('Base System')
+ax0.set_title('Base System Transition Matrix')
 im = ax0.imshow(base_transition_matrix, interpolation='nearest', origin='lower',
                 vmin=0, vmax=1, cmap='gist_earth')
 ax0.set_xlabel('State [index]')
 ax0.set_ylabel('State [index]')
 
 
-ax1.set_title('Mutant')
+ax1.set_title('Mutant Transition Matrix')
 im = ax1.imshow(sampling['transition_matrix'], interpolation='nearest',
                 origin='lower', vmin=0, vmax=1, cmap='gist_earth')
 ax1.set_xlabel('State [index]')

@@ -131,6 +131,13 @@ $$
 
 This formula is still conditional on $q_i$. Thus the procedure is to fit the model for each row of the transition matrix with MCMC and then compute, for each sampled $\lambda$ from the posterior, the expected information gain as above. The mean over the samples is then the final ``score'' for each state. At each step we choose the to initialize new sampling from the state with the highest such score.
 
+\begin{figure*}[h]
+\centering
+\includegraphics[width=7in]{code/9x9graph/plots/information_gain.png}
+\includegraphics[width=7in]{code/9x9graph/plots/transition_matricies.png}
+\caption{Sampling a nine state transition matrix by maximizing the expected information gain. The top two panels show the progress of the sampling, with the expected information gain at each step in the upper panel, and the chosen state in the second panel. On the bottom, the base and mutant transition matrices are shown. The base counts were generated from contiguous 5000 step trajectory. The two peaks in the expected information gain show the sampler effectively discovering the mutations in state twos and three, and then focusing its sampling there.}
+\end{figure*}
+
 \subsection{Minimize Uncertainty in the First Eigenvalue}
 
 The procedure above treats the entropy in each row of the transition matrix independently and on equal footing. But if we care about predicting the long-time dynamics of the system accurately, we care substantially more about some states than others.
