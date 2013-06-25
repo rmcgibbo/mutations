@@ -21,29 +21,40 @@ pp.rcParams['font.family'] = 'sans-serif'
 cm = 'Set1'
 plot_fn = 'information_gain.png'
 n_states = 9
+upto = 600
 figsize = (10, 6)  # inches
 
 # setthe default colormap
 mpltools.color.cycle_cmap(n_states, cmap=cm)
 
+# load the data
+sampling = io.loadh('sampling.h5')
+try:
+    igs = sampling['scores']
+except KeyError:
+    # the old code put it under this name
+    igs = sampling['igs']
+
+igs = igs[:upto]
+samples = sampling['samples'][:upto]
+n_counts = len(samples)
+sampling.close()
+
 ##############################################################################
 # Script
 ##############################################################################
 
-sampling = io.loadh('sampling.h5')
-n_counts = len(sampling['samples'])
 pp.figure(figsize=figsize)
-
 pp.title('sampling the 9 state mutant')
 
 ##############
 # Top subplot
 ##############
 ax = pp.subplot(2, 1, 1)
-df = pd.DataFrame(sampling['igs'], columns=['state %d' % i for i in range(n_states)])
+df = pd.DataFrame(igs, columns=['state %d' % i for i in range(n_states)])
 df.plot(legend=False, ax=ax)
 ax.set_ylabel('Expected Information Gain [nats]')
-ax.set_xlim(-1, len(sampling['samples']))
+ax.set_xlim(-1, n_counts)
 pp.xlabel('Time [steps]')
 
 
@@ -51,9 +62,8 @@ pp.xlabel('Time [steps]')
 # bottom subplot
 #################
 ax = pp.subplot(2, 1, 2)
-from_states = sampling['samples'][:, 0]
-ax.scatter(x=np.arange(len(sampling['samples'])), y=from_states,
-           c=mpltools.color.colors_from_cmap(n_states, cm)[from_states],
+ax.scatter(x=np.arange(n_counts), y=samples[:, 0],
+           c=mpltools.color.colors_from_cmap(n_states, cm)[samples[:, 0]],
            edgecolor='none')
 ax.set_ylabel('Sampled State [index]')
 ax.set_ylim(-1, n_states)
@@ -62,7 +72,6 @@ ax.set_yticks(range(n_states))
 pp.xlabel('Time [steps]')
 
 
-sampling.close()
 #pp.show()
 print 'saving figure as %s' % plot_fn
 pp.savefig(plot_fn)
