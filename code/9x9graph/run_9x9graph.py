@@ -11,17 +11,8 @@ import scipy.sparse
 from msmbuilder import io, msm_analysis, MSMLib
 from bayesmutant import MutantSampler
 
-P = np.array([
-  [0.8,   0.07,  0.13,  0.0,   0.0,   0.0,  0.0,  0.0,   0.0,],
-  [0.10,  0.75,  0.10,  0.0,   0.0,   0.0,  0.0,  0.05,  0.0,],
-  [0.08,  0.08,  0.8,   0.04,  0.0,   0.0,  0.0,  0.0,   0.0,],
-  [0.0,   0.0,   0.02,  0.78,  0.1,  0.1,  0.0,  0.0,  0.0,],
-  [0.0,   0.0,   0.0,   0.2,   0.6,   0.2,  0.0,  0.0,  0.0,],
-  [0.0,   0.0,   0.0,   0.15,  0.2,   0.6,  0.05,  0.0,  0.0,],
-  [0.0,   0.0,   0.0,   0.0,   0.0,   0.05,  0.75,  0.1,  0.1,],
-  [0.0,   0.0,   0.0,   0.0,   0.0,   0.0,  0.0,  0.9,  0.1,],
-  [0.0,   0.0,   0.0,   0.0,   0.0,   0.0,  0.1,  0.1,  0.8,],
-])
+P = np.loadtxt('base_transition_matrix.dat')
+
 
 
 mutant_transition_matrix = P + 0.2*scipy.sparse.rand(P.shape[0], P.shape[1], density=0.1).todense()

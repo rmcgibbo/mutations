@@ -19,7 +19,7 @@ import mpltools.color
 pd.options.display.mpl_style='default'
 pp.rcParams['font.family'] = 'sans-serif'
 cm = 'Set1'
-plot_fn = 'information_gain.png'
+plot_fn = 'plots/information_gain.png'
 n_states = 9
 upto = 600
 figsize = (10, 6)  # inches

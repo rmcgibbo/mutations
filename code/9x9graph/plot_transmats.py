@@ -5,13 +5,14 @@
 import os
 import sys
 
+import numpy as np
 from mdtraj import io
 
 import matplotlib.pyplot as pp
 import matplotlib.gridspec as gridspec
 from matplotlib.colorbar import Colorbar
 
-import example
+base_transition_matrix = np.loadtxt('base_transition_matrix.dat')
 
 ##############################################################################
 # Globals
@@ -20,7 +21,7 @@ import example
 figsize=(11,4)
 sampling = io.loadh('sampling.h5')
 fig = pp.figure(figsize=figsize)
-plot_fn = 'transmats.png'
+plot_fn = 'plots/transition_matricies.png'
 
 ##############################################################################
 # Script
@@ -32,7 +33,7 @@ ax1 = pp.subplot(gs[0, 12:22])
 cb_ax = pp.subplot(gs[0,-1])
 
 ax0.set_title('Base System')
-im = ax0.imshow(example.P, interpolation='nearest', origin='lower',
+im = ax0.imshow(base_transition_matrix, interpolation='nearest', origin='lower',
                 vmin=0, vmax=1, cmap='gist_earth')
 ax0.set_xlabel('State [index]')
 ax0.set_ylabel('State [index]')
