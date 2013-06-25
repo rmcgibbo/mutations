@@ -55,7 +55,7 @@ from_states = sampling['samples'][:, 0]
 ax.scatter(x=np.arange(len(sampling['samples'])), y=from_states,
            c=mpltools.color.colors_from_cmap(n_states, cm)[from_states],
            edgecolor='none')
-ax.set_ylabel('Sampled State')
+ax.set_ylabel('Sampled State [index]')
 ax.set_ylim(-1, n_states)
 ax.set_xlim(-1, n_counts)
 ax.set_yticks(range(n_states))
@@ -64,6 +64,8 @@ pp.xlabel('Time [steps]')
 
 sampling.close()
 #pp.show()
+print 'saving figure as %s' % plot_fn
 pp.savefig(plot_fn)
+
 if sys.platform == 'darwin':
     os.system('open %s' % plot_fn)
