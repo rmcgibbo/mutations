@@ -144,4 +144,11 @@ The procedure above treats the entropy in each row of the transition matrix inde
 
 Instead of maximize the information gain in the transition probabilities, $p_{ij}$, an alternative would be to minimize the uncertainty in the model's longest implied timescale.
 
+\section{Limitations and Future Work}
+While the framework presented in this paper is powerful, it neglects some key aspects of the adaptive sampling problem. First, the because the number of states is fixed by the model, the expected information gain formalism is unable to reason about the probability of discovering a new state. For the mutant problem, we thus rely on the proposition that the ``base'' sampling discovered all of the states. In order to properly address possibility of state discovery in the Bayesian framework, we would need to switch to a non-parametric framework, for instance based on the Dirichlet process.
+
+Reversibility is not dealt with.
+
+What about other ideas of how mutants act? For instance, a reasonable hypothesis is that they destabilize/stabilize a state. So, perhaps its metastability changes, but the ratio of the outbound transition probabilities change less so. This could be incorporated into the model, instead of, or in addition to, $q$.
+
 \end{document}
