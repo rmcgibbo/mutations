@@ -155,7 +155,7 @@ if __name__ == '__main__':
     print base_counts
     
     ms = MutantSampler(base_counts, mutant_transition_matrix)
-    ms.step(5000)
+    ms.step(25)
     
     print 'observed counts'
     print ms.observed_counts
