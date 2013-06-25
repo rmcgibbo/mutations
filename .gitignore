@@ -1,3 +1,8 @@
 main.aux
 main.log
 mainNotes.bib
+
+*build
+*.pyc
+
+code/bayesmutant/bayesmutant/version.py
