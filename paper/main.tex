@@ -133,9 +133,16 @@ This formula is still conditional on $q_i$. Thus the procedure is to fit the mod
 
 \begin{figure*}[h]
 \centering
-\includegraphics[width=7in]{code/9x9graph/plots/information_gain.png}
-\includegraphics[width=7in]{code/9x9graph/plots/transition_matricies.png}
+\includegraphics[width=7in]{../code/9x9graph/plots/information_gain.png}
+\includegraphics[width=7in]{../code/9x9graph/plots/transition_matricies.png}
 \caption{Sampling a nine state transition matrix by maximizing the expected information gain. The top two panels show the progress of the sampling, with the expected information gain at each step in the upper panel, and the chosen state in the second panel. On the bottom, the base and mutant transition matrices are shown. The base counts were generated from contiguous 5000 step trajectory. The two peaks in the expected information gain show the sampler effectively discovering the mutations in states two and three, and the effectively focusing its sampling on those states for a period of time.}
+\end{figure*}
+
+\begin{figure*}[h]
+\centering
+\includegraphics[width=7in]{../code/cayleytree/figures/cayley.png}
+\caption{Cayley tree toy model, in which a mutation destabilizes one of the ``arms'' of the network. The system was constructed via a rate matrix construction.}
+%\caption{Sampling a nine state transition matrix by maximizing the expected information gain. The top two panels show the progress of the sampling, with the expected information gain at each step in the upper panel, and the chosen state in the second panel. On the bottom, the base and mutant transition matrices are shown. The base counts were generated from contiguous 5000 step trajectory. The two peaks in the expected information gain show the sampler effectively discovering the mutations in states two and three, and the effectively focusing its sampling on those states for a period of time.}
 \end{figure*}
 
 \subsection{Minimize Uncertainty in the First Eigenvalue}

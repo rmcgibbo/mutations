@@ -157,5 +157,5 @@ if __name__ == '__main__':
     np.savetxt('cayleytree_tprob_wildtype.dat', wt_tprob)
     np.savetxt('cayleytree_tprob_mutant.dat', mutant_tprob)
     
-    pp.savefig('figures/cayley.png')
+    pp.savefig('figures/cayley.png', dpi=300)
     os.system('open figures/cayley.png')
