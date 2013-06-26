@@ -13,8 +13,6 @@ from bayesmutant import MutantSampler
 
 P = np.loadtxt('base_transition_matrix.dat')
 
-
-
 mutant_transition_matrix = P + 0.2*scipy.sparse.rand(P.shape[0], P.shape[1], density=0.1).todense()
 mutant_transition_matrix /= np.sum(mutant_transition_matrix, axis=1)
 
