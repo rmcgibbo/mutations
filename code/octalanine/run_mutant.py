@@ -3,6 +3,7 @@
 ###############################################################################
 # stdlib
 import sys
+import numpy as np
 from os.path import join, abspath, dirname
 
 # third party
@@ -13,6 +14,7 @@ import simtk.openmm as mm
 from mdtraj import io
 
 # this package
+import bayesmutant
 from bayesmutant import OpenMMMutantSampler
 
 
@@ -39,11 +41,13 @@ def main():
     ms = OpenMMMutantSampler(wildtype_counts, wildtype_states_fn,
                     wildtype_topology_fn, mutant_topology_fn, lag_time,
                     simulation=setup_simulation())
-    ms.step(2)
 
+    # run for a microsecond
+    ms.step(2000)
 
     io.saveh('sampling.h5', base_counts=wildtype_counts, samples=ms.samples,
-                        observed_counts=ms.counts, scores=ms.scores)
+             observed_counts=ms.counts, scores=ms.scores,
+             bayesmutant_code_version = np.array([bayesmutant.version.full_version]))
 
 
 
