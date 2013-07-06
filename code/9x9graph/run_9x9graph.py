@@ -9,7 +9,7 @@ import numpy as np
 import scipy.sparse
 
 from msmbuilder import io, msm_analysis, MSMLib
-from bayesmutant import MutantSampler
+from bayesmutant import SimpleMutantSampler
 
 P = np.loadtxt('base_transition_matrix.dat')
 
@@ -23,7 +23,7 @@ base_counts = MSMLib.get_counts_from_traj(trajectory).todense()
 print 'base counts'
 print base_counts
 
-ms = MutantSampler(base_counts, mutant_transition_matrix)
+ms = SimpleMutantSampler(base_counts, mutant_transition_matrix)
 ms.step(5000)
 
 print 'observed counts'
