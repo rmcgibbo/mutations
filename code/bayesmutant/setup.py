@@ -1,4 +1,5 @@
 import os
+import subprocess
 from distutils.core import setup
 
 ##########################
@@ -29,7 +30,7 @@ def git_version():
         GIT_REVISION = out.strip().decode('ascii')
     except OSError:
         GIT_REVISION = "Unknown"
-
+    
     return GIT_REVISION
 
 def write_version_py(filename='bayesmutant/version.py'):
@@ -47,10 +48,7 @@ if not release:
     # Adding the git rev number needs to be done inside write_version_py(),
     # otherwise the import of numpy.version messes up the build under Python 3.
     FULLVERSION = VERSION
-    if os.path.exists('.git'):
-        GIT_REVISION = git_version()
-    else:
-        GIT_REVISION = "Unknown"
+    GIT_REVISION = git_version()
 
     if not ISRELEASED:
         FULLVERSION += '.dev-' + GIT_REVISION[:7]
