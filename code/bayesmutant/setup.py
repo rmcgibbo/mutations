@@ -34,7 +34,7 @@ def git_version():
 
 def write_version_py(filename='bayesmutant/version.py'):
     cnt = """
-# THIS FILE IS GENERATED FROM MDTRAJ SETUP.PY
+# THIS FILE IS GENERATED FROM BAYESMUTANT SETUP.PY
 short_version = '%(version)s'
 version = '%(version)s'
 full_version = '%(full_version)s'
