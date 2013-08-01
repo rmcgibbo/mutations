@@ -33,6 +33,10 @@ class MutantSampler(object):
         self._counts = []
         self._scores = []
 
+        # current estimate of the effective number of counts, incorporating
+        # both the actual observed counts and the q-weighted prior counts
+        self._eff_counts = []
+
     @property
     def scores(self):
         """Score of each state at each step, that determines which state was picked
@@ -66,6 +70,16 @@ class MutantSampler(object):
         """
         return self._observed_counts
 
+    def eff_counts(self):
+        """The effective numner of counts, at each iteration
+        during the sampling
+
+        Returns
+        -------
+        eff_counts : np.ndarray, shape=(n_samples, n_states, n_states)
+        """
+        return self._eff_counts
+
     def choose_state(self):
         """Select a new state to sample from
 
@@ -84,6 +98,8 @@ class MutantSampler(object):
                             alpha=1, beta=1)
         model.sample(iter=50000, burn=1000, thin=100, progress_bar=False)
         igs = model.expected_information_gain()
+
+        self._eff_counts.append(model.eff_counts())
         self._scores.append(igs)
 
         if self._verbose:

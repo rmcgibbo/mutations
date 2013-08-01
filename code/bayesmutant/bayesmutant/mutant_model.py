@@ -131,99 +131,107 @@ class MutantModel(BaseModel):
         assert igs.shape == (n_samples, self.observed_counts.shape[0])
         return np.mean(igs, axis=0)
 
-
-class _MutantModelRow(BaseModel):
-    def __init__(self, observed_counts, base_counts, alpha=0.5, beta=0.5,
-                 fixed_q=None):
-        """Probabilistic model for the observed outbound transition
-        counts from state i.
-
-        Parameters
-        ----------
-        observed_counts : np.ndarray, shape=(n_states)
-            The number of observed transitions to other states in THIS protein
-        base_counts : np.ndarray, shape=(n_states)
-            The number of observed transitions to other states in the BASE protein,
-            of which this protein is a mutant.
-        alpha, beta : float
-            Hyperparameters for the influence that the base protein has on
-            our protein.
-        fixed_q : {float, None}
-            Instead of setting the influence that the base protein has as a random
-            variable, make it fixed at this value. Note that when fixed_q is
-            specified, alpha and beta have no influence.
-        """
-        base_counts = np.asarray(base_counts, dtype=float)
-        observed_counts = np.asarray(observed_counts, dtype=float)
-        assert base_counts.shape == observed_counts.shape
-
-        if fixed_q is None:
-            q = pymc.Beta(name='q', alpha=alpha, beta=beta)
-        else:
-            q = fixed_q
-
-        jeffrys_counts = 0.5*np.ones_like(base_counts)
-
-        @pymc.deterministic
-        def psuedocounts(q=q):
-            return q*base_counts + jeffrys_counts
-
-        _probs = pymc.Dirichlet('_probs', theta=psuedocounts)
-        probs = pymc.CompletedDirichlet('probs', _probs)
-
-        counts = pymc.Multinomial(name='counts', value=observed_counts,
-                                  n=np.sum(observed_counts), p=_probs,
-                                  observed=True)
-
-        # set all of the random variables as attributes
-        self.q = q
-        self.probs = probs
-        self._probs = _probs
-        self.counts = counts
-        self.psuedocounts = psuedocounts
+    def eff_counts(self):
+        """Current estimated counts matrix, based both on the observed counts
+        and the q-weighted prior counts.
         
-        self.sampler = pymc.MCMC(self)
-        self.observed_counts = observed_counts
-
-
-    def expected_information_gain(self):
-        """Calculate the expected information gain that would come from
-        observing a single new count
-
-        Returns
-        -------
-        ig : float
-            The expected information gain
+        This is calculated as a mean over the MCMC iterations
         """
-        alphas = self.trace('psuedocounts')[:] + self.observed_counts
-        n_samples = len(alphas)
+        return np.mean(self.trace('psuedocounts')[:] + self.observed_counts, axis=0)
 
-        alphas_total = np.sum(alphas, axis=1)
 
-        igs = (scipy.special.psi(alphas_total) - np.log(alphas_total) +
-            np.sum(alphas*(np.log(alphas) - scipy.special.psi(alphas)), axis=1) / alphas_total)
+# class _MutantModelRow(BaseModel):
+#     def __init__(self, observed_counts, base_counts, alpha=0.5, beta=0.5,
+#                  fixed_q=None):
+#         """Probabilistic model for the observed outbound transition
+#         counts from state i.
+
+#         Parameters
+#         ----------
+#         observed_counts : np.ndarray, shape=(n_states)
+#             The number of observed transitions to other states in THIS protein
+#         base_counts : np.ndarray, shape=(n_states)
+#             The number of observed transitions to other states in the BASE protein,
+#             of which this protein is a mutant.
+#         alpha, beta : float
+#             Hyperparameters for the influence that the base protein has on
+#             our protein.
+#         fixed_q : {float, None}
+#             Instead of setting the influence that the base protein has as a random
+#             variable, make it fixed at this value. Note that when fixed_q is
+#             specified, alpha and beta have no influence.
+#         """
+#         base_counts = np.asarray(base_counts, dtype=float)
+#         observed_counts = np.asarray(observed_counts, dtype=float)
+#         assert base_counts.shape == observed_counts.shape
+
+#         if fixed_q is None:
+#             q = pymc.Beta(name='q', alpha=alpha, beta=beta)
+#         else:
+#             q = fixed_q
+
+#         jeffrys_counts = 0.5*np.ones_like(base_counts)
+
+#         @pymc.deterministic
+#         def psuedocounts(q=q):
+#             return q*base_counts + jeffrys_counts
+
+#         _probs = pymc.Dirichlet('_probs', theta=psuedocounts)
+#         probs = pymc.CompletedDirichlet('probs', _probs)
+
+#         counts = pymc.Multinomial(name='counts', value=observed_counts,
+#                                   n=np.sum(observed_counts), p=_probs,
+#                                   observed=True)
+
+#         # set all of the random variables as attributes
+#         self.q = q
+#         self.probs = probs
+#         self._probs = _probs
+#         self.counts = counts
+#         self.psuedocounts = psuedocounts
         
-        assert len(igs) == n_samples
+#         self.sampler = pymc.MCMC(self)
+#         self.observed_counts = observed_counts
+
+
+#     def expected_information_gain(self):
+#         """Calculate the expected information gain that would come from
+#         observing a single new count
+
+#         Returns
+#         -------
+#         ig : float
+#             The expected information gain
+#         """
+#         alphas = self.trace('psuedocounts')[:] + self.observed_counts
+#         n_samples = len(alphas)
+
+#         alphas_total = np.sum(alphas, axis=1)
+
+#         igs = (scipy.special.psi(alphas_total) - np.log(alphas_total) +
+#             np.sum(alphas*(np.log(alphas) - scipy.special.psi(alphas)), axis=1) / alphas_total)
         
-        return np.mean(igs)
+#         assert len(igs) == n_samples
+        
+#         return np.mean(igs)
 
-    def sample(self, iter, burn=0, thin=1, tune_interval=1000,
-               tune_throughout=True, save_interval=None, burn_till_tuned=False,
-               stop_tuning_after=False, verbose=0, progress_bar=True):
-        """Sample the model posterior using MCMC. This is simply a convenience
-        function on top of pymc.MCMC.sample for our model. Refer to the
-        documentation on that method for a description of the parameters.
-        """
-        self.sampler.sample(iter, burn, thin, tune_interval, tune_throughout,
-                            save_interval, burn_till_tuned, stop_tuning_after,
-                            verbose, progress_bar)
+#     def sample(self, iter, burn=0, thin=1, tune_interval=1000,
+#                tune_throughout=True, save_interval=None, burn_till_tuned=False,
+#                stop_tuning_after=False, verbose=0, progress_bar=True):
+#         """Sample the model posterior using MCMC. This is simply a convenience
+#         function on top of pymc.MCMC.sample for our model. Refer to the
+#         documentation on that method for a description of the parameters.
+#         """
+#         self.sampler.sample(iter, burn, thin, tune_interval, tune_throughout,
+#                             save_interval, burn_till_tuned, stop_tuning_after,
+#                             verbose, progress_bar)
 
-    def trace(self, name):
-        """Get the posterior samples. Convenience to `pymc.MCMC.trace`.
+#     def trace(self, name):
+#         """Get the posterior samples. Convenience to `pymc.MCMC.trace`.
 
-        The allowable `name`s are {'probs', '_probs', 'psuedocounts', and 'q'}
-        """
-        return self.sampler.trace(name)
+#         The allowable `name`s are {'probs', '_probs', 'psuedocounts', and 'q'}
+#         """
+#         return self.sampler.trace(name)
 
 
 if __name__ == '__main__':

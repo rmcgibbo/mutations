@@ -42,8 +42,7 @@ def main():
                     wildtype_topology_fn, mutant_topology_fn, lag_time,
                     simulation=setup_simulation())
 
-    # run for a microsecond
-    ms.step(2000)
+    ms.step(500)
 
     io.saveh('sampling.h5', base_counts=wildtype_counts, samples=ms.samples,
              observed_counts=ms.counts, scores=ms.scores,
