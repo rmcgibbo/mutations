@@ -16,10 +16,10 @@
 \usepackage[orientation=landsSe,size=custom,width=91.44,height=91.44,scale=1.6,debug]{beamerposter}
 \beamertemplategridbackground[1cm]
 
-\title{Accelerated Sampling of Mutants: An MSM-based Hierarchical Bayesian Strategy}
+\title{Accelerated Sampling of Mutants: A Hierarchical Bayesian Markov State Model Strategy}
 \author{Robert McGibbon and Vijay Pande}
 \institute[Stanford University]{Department of Chemistry, Stanford University, Stanford, CA.}
-\date[Jun. 10, 2012]{Jun. 10, 2012}
+%\date[Jun. 10, 2012]{Jun. 10, 2012}
 
 
 
@@ -39,9 +39,8 @@
   % what am I doing
   \item Mutational analysis is the bread and butter of experimental protein biophysics.
   \item In simulations, mutational analysis is a major challenge, because the costs scale proportional to the number of mutants.
-  \item Mutational analysis is \emph{useful} because of existence of extensive
-  mutual information between mutants.
-  \item This suggests that extensive simulations of a wild-type protein can be an \alert{informative prior} on new simulations of a mutant.
+  \item The extensive commonalities between mutants is what makes the analysis \emph{useful}.
+  \item This suggests that large-scale simulations of a wild-type protein can be an \alert{informative prior} on new simulations of a mutant.
   \item Our Ansatz: mutation perturbs the rates of interconversion between a unknown subset of the conformational states of a protein.
   \end{itemize}
 \end{block}
@@ -49,24 +48,25 @@
 
 \begin{block}{Model}
 \begin{itemize}
-    \item Use a common discretization of the state space between the mutant and wild type.
+    \item We use a common discretization of the state space between the mutant and wild type.
 
-    \item Let $\vec{p_i}^{M}$ be the outbound transition probabilities from state $i$ in mutant, $\vec{c_i}^{WT}$ be the observed outbound transition counts from state $i$ in the wild type.
-
-    \item Let the transfer coefficients, $q_i \in (0, 1)$, be the degree of information transfer between wildtype and mutant state $i$.
+    \item Let $\vec{p_i}^{M}$ be the outbound transition probabilities from state $i$ in mutant, $\vec{c_i}^{WT}$ be the observed outbound transition counts from state $i$ in the wild type, and $q_i \in (0, 1)$, the transfer coefficients, be the degree of information transfer between wildtype and mutant dynamics from state $i$.
 
     \item \alert{Informative prior} on $\vec{p_i}^{MT}$:
     $$ \vec{p_i}^{MT} \sim \operatorname{Dirichlet}(q_i \cdot \vec{c_i}^{WT} + 1/2) $$
     %\item In the absence of new data, we expect the mutant to look like the wildtype.
-    \item When $q_i=0$, we have Jeffreys prior, when $q_i > 0$, counts are \alert{inherited} from the wildtype into the mutant.
+    \item When $q_i=0$, we have Jeffreys prior, and when $q_i > 0$, counts are \alert{inherited} from the wildtype into the mutant.
     
     \item $q_i$ must also be learned from the data. For convenience, the prior on $q_i$ is Beta, with shared hyperparameters, which constrains $q_i \in (0,1)$:
     $$ q_i \sim Beta(\alpha, \beta) $$
-    \item Posterior distribution on $p_i$:
-    \begin{align*}
-    P(&\vec{p}_i^{MT} \vert \vec{c_i}^{MT}) \propto \\
-    &\int_0^1 dq_i \; \operatorname{Dir}(q_i \cdot \vec{c}_i^{WT} + \vec{c_i}^{MT} + 1/2) \cdot  P_{\alpha, \beta}(q_i)
-    \end{align*}
+    \item Given observed transitions in $MT$, posterior distribution on $p_i$:
+    $$
+    P(\vec{p}_i^{MT} \vert \vec{c_i}^{MT}) \propto %\\
+    $$
+    
+    $$
+    \int_0^1 dq_i \; \operatorname{Dir}(q_i \cdot \vec{c}_i^{WT} + \vec{c_i}^{MT} + 1/2) \cdot  P_{\alpha, \beta}(q_i)
+    $$
     
 \end{itemize}
 \end{block}
@@ -110,21 +110,17 @@ where $\lambda = q_i \cdot \vec{c}_i^{WT} + \vec{c_i}^{MT} + 1/2$ and $\Psi$ is 
 
 \end{itemize}
 \end{block}
-\vspace{1in}
+\vspace{0.5in}
 
+
+\begin{block}{Example}
+\end{block}
 
 \begin{figure}
     \centering
  \includegraphics[width=\textwidth]{../code/9x9graph/plots/transition_matrices-tight.png}
     \caption{Transition probability matrix for an example system with nine states. Here, the mutant has new connections $3\rightarrow 0, 2\rightarrow 7, 2\rightarrow 8$}
 \end{figure}
-
-
-% \begin{minipage}
-% \begin{figure}    
-% 
-% \end{figure}
-% \end{minipage}
 
 
 
@@ -138,7 +134,7 @@ where $\lambda = q_i \cdot \vec{c}_i^{WT} + \vec{c_i}^{MT} + 1/2$ and $\Psi$ is 
 \end{block}
 
 \begin{figure}
- \includegraphics[width=\textwidth]{../code/9x9graph/plots/information_gain.png}
+ \includegraphics[width=\textwidth]{../code/9x9graph/plots/information_gain-tight.png}
     \caption{When the model discovers unexpected behavior anomalies, like the transitions from $2$ and $3$, it focuses its sampling there.}
 \end{figure}
 
@@ -147,12 +143,11 @@ where $\lambda = q_i \cdot \vec{c}_i^{WT} + \vec{c_i}^{MT} + 1/2$ and $\Psi$ is 
     \caption{The posterior distributions over $q$ show that the model has correctly ``discovered'' that states $2$, $3$ are dissimilar in the mutant. Some states (e.g. $8$) that are undersampled still feature very wide posteriors.}
 \end{figure}
 
-
     
 \begin{block}{Limitations}
 \begin{itemize}
 \item Conformational states are assumed to be the same for wildtype and mutant.
-\item No model for reversibility or detailed balance constraints.
+\item No enforcement of detailed balance.
 \item Uncertainty due to low wildtype counts in low-population unfolded microstates can swamp model, focus sampling there.
 \end{itemize}
 \end{block}
@@ -170,6 +165,7 @@ where $\lambda = q_i \cdot \vec{c}_i^{WT} + \vec{c_i}^{MT} + 1/2$ and $\Psi$ is 
 \bibliography{Library.bib}
 \footnotesize
 \begin{itemize}
+\item Smith, C. ``Cloning and mutagenesis: tinkering with the order of things.'' \emph{Nat. Methods} 4 455 (2007)
 \item Patil, A.; Huard, D.; Fonnesbeck, C. J. ``PyMC: Bayesian stochastic modelling in Python.'' \emph{J. Stat. Softw.} 35 1 (2010)
 \item Cohn, D; Atlas, L.; Ladner, R. ``Improving generalization with active learning.'' \emph{Machine Learning} 15 201 (1994)
 \end{itemize}

@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  29 AUG 2013 20:05
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  30 AUG 2013 10:54
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1394,14 +1394,14 @@ File: SU_altSigSeal_2color_pos.jpg Graphic file (type jpg)
 <use SU_altSigSeal_2color_pos.jpg>
 Package pdftex.def Info: SU_altSigSeal_2color_pos.jpg used on input line 26.
 (pdftex.def)             Requested size: 617.90651pt x 176.55026pt.
-LaTeX Font Info:    Calculating math sizes for size <23.04> on input line 180.
+LaTeX Font Info:    Calculating math sizes for size <23.04> on input line 176.
 
 
 LaTeX Font Warning: Font shape `OT1/cmss/m/it' in size <39.81> not available
-(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 180.
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 176.
 
 
-LaTeX Font Info:    Calculating math sizes for size <39.81> on input line 180.
+LaTeX Font Info:    Calculating math sizes for size <39.81> on input line 176.
 
 <../code/9x9graph/plots/transition_matrices-tight.png, id=12, 970.62625pt x 386
 .44376pt>
@@ -1409,41 +1409,42 @@ File: ../code/9x9graph/plots/transition_matrices-tight.png Graphic file (type p
 ng)
  <use ../code/9x9graph/plots/transition_matrices-tight.png>
 Package pdftex.def Info: ../code/9x9graph/plots/transition_matrices-tight.png u
-sed on input line 180.
+sed on input line 176.
 (pdftex.def)             Requested size: 763.45213pt x 303.97816pt.
-LaTeX Font Info:    Calculating math sizes for size <33.18> on input line 180.
+LaTeX Font Info:    Calculating math sizes for size <33.18> on input line 176.
 
-<../code/9x9graph/plots/information_gain.png, id=14, 722.7pt x 433.62pt>
-File: ../code/9x9graph/plots/information_gain.png Graphic file (type png)
+<../code/9x9graph/plots/information_gain-tight.png, id=14, 877.2775pt x 576.152
+5pt>
+File: ../code/9x9graph/plots/information_gain-tight.png Graphic file (type png)
 
-<use ../code/9x9graph/plots/information_gain.png>
-Package pdftex.def Info: ../code/9x9graph/plots/information_gain.png used on in
-put line 180.
-(pdftex.def)             Requested size: 763.45213pt x 458.07352pt.
+ <use ../code/9x9graph/plots/information_gain-tight.png>
+Package pdftex.def Info: ../code/9x9graph/plots/information_gain-tight.png used
+ on input line 176.
+(pdftex.def)             Requested size: 763.45213pt x 501.40686pt.
 
 <../code/9x9graph/posterior_q.png, id=15, 641.0349pt x 375.804pt>
 File: ../code/9x9graph/posterior_q.png Graphic file (type png)
 
 <use ../code/9x9graph/posterior_q.png>
-Package pdftex.def Info: ../code/9x9graph/posterior_q.png used on input line 18
-0.
+Package pdftex.def Info: ../code/9x9graph/posterior_q.png used on input line 17
+6.
 (pdftex.def)             Requested size: 763.45213pt x 447.59077pt.
 
 No file poster.bbl.
 
 LaTeX Font Warning: Font shape `OT1/cmss/m/it' in size <27.65> not available
-(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 180.
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 176.
 
 
 File: SU_altSigSeal_2color_pos.jpg Graphic file (type jpg)
 <use SU_altSigSeal_2color_pos.jpg>
-Package pdftex.def Info: SU_altSigSeal_2color_pos.jpg used on input line 180.
+Package pdftex.def Info: SU_altSigSeal_2color_pos.jpg used on input line 176.
 (pdftex.def)             Requested size: 617.90651pt x 176.55026pt.
  [1{/usr/local/texlive/2011/texmf-var/fonts/map/pdftex/updmap/pdftex.map}
 
  </usr/local/texlive/2011/../texmf-local/tex/latex/local/SU_altSigSeal_2color_p
 os.jpg> <../code/9x9graph/plots/transition_matrices-tight.png> <../code/9x9grap
-h/plots/information_gain.png> <../code/9x9graph/posterior_q.png>]
+h/plots/information_gain-tight.png> <../code/9x9graph/posterior_q.png>]
 \tf@nav=\write6
 \openout6 = `poster.nav'.
 
@@ -1453,19 +1454,19 @@ h/plots/information_gain.png> <../code/9x9graph/posterior_q.png>]
 \tf@snm=\write8
 \openout8 = `poster.snm'.
 
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 181.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 181.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 177.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 177.
  (./poster.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 181.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 181.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 177.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 177.
 Package rerunfilecheck Info: File `poster.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 181.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 177.
  ) 
 Here is how much of TeX's memory you used:
  17254 strings out of 493633
- 314146 string characters out of 3143378
- 491566 words of memory out of 3000000
+ 314176 string characters out of 3143378
+ 493782 words of memory out of 3000000
  20095 multiletter control sequences out of 15000+200000
  22553 words of font info for 90 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
@@ -1479,7 +1480,7 @@ usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmssi17.pfb></
 usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></u
 sr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb
 >
-Output written on poster.pdf (1 page, 407103 bytes).
+Output written on poster.pdf (1 page, 405662 bytes).
 PDF statistics:
  81 PDF objects out of 1000 (max. 8388607)
  58 compressed objects within 1 object stream
