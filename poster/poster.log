@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  30 AUG 2013 10:54
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (TeX Live 2011) (format=pdflatex 2011.7.3)  30 AUG 2013 10:55
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -1464,10 +1464,10 @@ Package rerunfilecheck Info: File `poster.out' has not changed.
 Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 177.
  ) 
 Here is how much of TeX's memory you used:
- 17254 strings out of 493633
- 314176 string characters out of 3143378
- 493782 words of memory out of 3000000
- 20095 multiletter control sequences out of 15000+200000
+ 17252 strings out of 493633
+ 314147 string characters out of 3143378
+ 479773 words of memory out of 3000000
+ 20093 multiletter control sequences out of 15000+200000
  22553 words of font info for 90 fonts, out of 3000000 for 9000
  831 hyphenation exceptions out of 8191
  49i,20n,66p,952b,967s stack positions out of 5000i,500n,10000p,200000b,50000s
@@ -1480,7 +1480,7 @@ usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmssi17.pfb></
 usr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></u
 sr/local/texlive/2011/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb
 >
-Output written on poster.pdf (1 page, 405662 bytes).
+Output written on poster.pdf (1 page, 403997 bytes).
 PDF statistics:
  81 PDF objects out of 1000 (max. 8388607)
  58 compressed objects within 1 object stream
