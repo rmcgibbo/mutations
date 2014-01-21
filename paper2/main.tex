@@ -1,0 +1,113 @@
+\documentclass[twocolumn,floatfix,nofootinbib,aps]{revtex4-1}
+\usepackage[utf8]{inputenc}
+
+\usepackage{algorithmicx, algpseudocode, algorithm}
+\usepackage{amsmath}    % need for subequations
+\usepackage{amssymb}    % for symbols
+\usepackage{graphicx}   % need for figures
+\usepackage{verbatim}   % useful for program listings
+\usepackage{color}      % use if color is used in text
+\usepackage{subfigure}  % use for side-by-side figures
+%\usepackage{hyperref}   % use for hypertext links, including those to external documents and URLs
+
+% new commands
+\DeclareMathOperator*{\argmax}{argmax\,}
+\renewcommand{\vert}{\, | \,}
+
+\usepackage[capitalise]{cleveref}   % use for referencing figures/equations
+\begin{document}
+\title{Hierarchical Bayesian Modeling of Protein Dynamics Across Sequence Space}
+\author{Robert T. McGibbon}
+
+\begin{abstract}
+\end{abstract}
+\maketitle
+
+\section{Introduction}
+Mutational analysis is one of the central tools in experimental protein science, but remains a challenge for simulation methodologies. Using standard simulation approaches, the study of a protein and a single mutant requires $2\times$ the computational effort of studying just the original protein.
+
+Mutational analysis is a viable experimental strategy for building an understanding of a \emph{single} protein because small perturbations to a protein's sequence generally have, in some sense, small effects on the structure and dynamics. Proteins can be classified into some tree-like structure (e.g. CATH), and members in the same family have significant commonalities. This is so obvious as to be obtuse, but it's worth stating explicitly: knowledge of one protein can help us understand related proteins.
+
+But molecular simulation protocols rarely take advantage of this observation. When we run MD simulations or build Markov state models, there is not explicit mathematical sense in which we share information across protein sequences.
+
+The simplest example of this type of information sharing about might be called ``hot-starting''. Consider the scenario in which we spent months doing extensive simulations of a protein $A$, and now want to begin the study of a related protein $A'$. Could we use our knowledge of protein $A$ to accelerate the convergence of our simulations of protein $A'$? Probably, yes. For instance, one possible protocol would be to sample from the equilibrium distribution of $A$, and use those configurations as the starting coordinates for simulations of protein $A'$ -- ``hot-starting'' the sampling of $A'$. If the true equilibrium distribution of $A'$ is in some sense close to the distribution of $A$, perhaps by simulations in $A'$ will convergence more rapidly when initialized from $P_A$.
+
+Hot-starting is practical, but limited. Can we do more?
+
+\section{Hierarchical Bayesian Models are a Natural Framework}
+
+Proteins are pretty complicated, so lets go to a simpler system to introduce the idea of hierarchical Bayesian models.
+
+Consider the following: you are an entomologist, studying a specific genus of beetles. The genus contains two species $A$ and $B$, and you wish to estimate the length of the two species of beetles, $\mu_A$ and $\mu_B$ to understand their evolution. You go into the field, collect as many beetles as you can, and measure their lengths.
+
+\subsection{Approach 1: Single-Task Learning}
+
+You have \emph{separate} models for species A and species B that do not engage in any ``crosstalk'': that is, the observations of the lengths of the beetles in species $A$, $x^{(A)}_i$ for $i \in {1, 2, \ldots, N_A}$  have no impact on the calculation of $\mu_B$ and visa-versa. The simplest version would be just to take the empirical mean of the beetles in species A and the empirical mean of the beetles in species B .
+
+\begin{align*}
+\hat{\mu}_A &= \sum_i^{N_A} x^{(A)}_i \\
+\hat{\mu}_B &= \sum_i^{N_B} x^{(B)}_i
+\end{align*}
+
+If you prefer a Bayesian treatment, that's fine. You could construct a full posterior distributions for the means. But for ``single task learning'', your models always assume that $x^{(A)}$ is independent of $x^{(B)}$. For example, you might make a model with a prior distribution $G$ over the means and fixed variance. Here, $\mu_A, \mu_B$ are iid samples from $G$.
+
+\begin{align*}
+\mu_A, \mu_B & \sim G \\
+x^{(A)}_i \,|\, \mu_A & \sim \mathcal{N}(\mu_A, 1) \\
+x^{(B)}_i \,|\, \mu_B & \sim \mathcal{N}(\mu_B, 1) \\
+\end{align*}
+
+In this model, $P(\mu_A, \{x^{(A)}\})$ and $P(\mu_B, \{x^{(B)}\})$ are independent. It's just one model that you run twice on two different datasets.
+
+\subsection{Approach 2: Multi-task Learning}
+
+But in the Bayesian formalism, it's possible to \emph{couple} the models via the priors.
+\begin{align*}
+\mu_0 & \sim G \\
+\mu_A, \mu_B \,|\, \mu_0 & \sim F(\mu_0) \\
+x^{(A)}_i \,|\, \mu_A & \sim \mathcal{N}(\mu_A, 1) \\
+x^{(B)}_i \,|\, \mu_B & \sim \mathcal{N}(\mu_B, 1)
+\end{align*}
+
+
+\section{Multi-task Reversible HMM}
+
+Suppose we have a collection of $J$ reversible hidden Markov models with $K$ latent states. Let $DR_K(\{\alpha_{j, e}\})$ be the conjugate prior for a reversible Markov chain (Diaconis \& Rolles, 2006) on the complete graph with $K$ vertices, loops attached to all vertices, and positive edge weights $\{\alpha_{j, e}\}$, $e \in \{1, \ldots, K(K+1)/2\}$.
+
+\begin{align*}
+\theta^*_k & \overset{i.i.d.}{\sim} G_1 \\
+\alpha^*_e & \overset{i.i.d.}{\sim} G_2 \\
+\theta_{j,k} \,|\, \theta^*_k & \sim  H_1(\theta^*_k) \\
+\alpha_{j,e} \,|\, \alpha^*_e & \sim H_2(\alpha^*_e) \\
+\mathbf{T}_j \,|\, \{\alpha_{j, e}\} & \sim DR_K(\{\alpha_{j, e}\}) \\
+X_{j, t+1} \,|\, X_{j, t} & \sim \operatorname{Categorical}(\mathbf{T}_{j}(X_{j,t}, \cdot)) \\
+Y_{j,t} \,|\, X_{j,t} & \sim F(\theta_{j, X_{j,t}})
+\end{align*}
+
+This is a set of $J$ reversible hidden Markov models which are linked via their priors. $Y_{j,t} \in \mathbb{R}^d$, $t = \{1, \ldots, T\}$ is the observed $j$th stochastic process, which evolves based on a latent reversible Markov chain $X_{j, t} \in \{1, \ldots, K\}$, $t = \{1, \ldots, T\}$.
+
+$\theta^*_k$ and $\alpha^*_e$ can be interpreted as an ``idealized'' HMM, and each of the system-specfic HMMs are generated by some perturbation of $\theta^*_k$ and $\alpha^*_e$ given by $H_1$ and $H_2$. For example, if $H_1$ and $H_2$ are delta functions, then all of the $J$ systems share the same output distribution and transition kernel.
+
+To make this model more specific, let's put in explicit forms for $G_1$, $G_2$, $H_1$, $H_2$ and $F$.
+
+
+\begin{align}
+G_1 & = \mathcal{N}(\mu_0, \tau_0^2) \\
+G_2 & = \operatorname{Gamma}(a_0, b_0) \\
+H_1(\theta^*_k) & = \mathcal{N}(\theta^*_k, \phi_0^2) \\
+H_2(\alpha_e^*) & = \mathcal{N}(\alpha_e^*, \psi^2_0) \\
+F(\theta_{j,k}) &= \mathcal{N}(\theta_{j,k}, \sigma^2)
+\end{align}
+
+With fixed hyperparameters $\mu_0, \tau_0, a_0, b_0, \phi_0, \psi_0, \sigma$. Now we have a kind of Gaussian HMM / random effects model, where each of the $J$ system-specific HMMs are generated from random perturbations of the means and weights of a template HMM.
+
+\section{Nonparametric extensions}
+You could make this model nonparametric in the number of states. Alternatively, you could make a model that's not just over a single family of proteins, but instead over a collection of families of proteins. The number of families could then be nonparametric.
+
+\section{Similar Work}
+
+This is kind of like a hierarhical mixture model, e.g. \url{http://www.statisticalinnovations.com/articles/multilevel.pdf}
+
+Kim and Smith, 2006, built a HDP mixture model with random effects, which is sort of similar to the scheme here in spirit, if you replace the base HMM in our model with a mixture model and then extend to a nonparameteric number of protein families \url{http://www.datalab.uci.edu/papers/nips06_hMDP_RE.pdf}
+
+\end{document}
