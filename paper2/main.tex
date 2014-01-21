@@ -1,7 +1,7 @@
 \documentclass[twocolumn,floatfix,nofootinbib,aps]{revtex4-1}
 \usepackage[utf8]{inputenc}
 
-\usepackage{algorithmicx, algpseudocode, algorithm}
+%\usepackage{algorithmicx, algpseudocode, algorithm}
 \usepackage{amsmath}    % need for subequations
 \usepackage{amssymb}    % for symbols
 \usepackage{graphicx}   % need for figures
@@ -69,6 +69,7 @@ x^{(A)}_i \,|\, \mu_A & \sim \mathcal{N}(\mu_A, 1) \\
 x^{(B)}_i \,|\, \mu_B & \sim \mathcal{N}(\mu_B, 1)
 \end{align*}
 
+During learning, this type of model lets you share statistical weight between observations from different classes via narrowing of the posterir on $\mu_0$, the ``group mean''.
 
 \section{Multi-task Reversible HMM}
 
